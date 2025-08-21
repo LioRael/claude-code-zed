@@ -2,8 +2,10 @@ use anyhow::{anyhow, Result};
 use dirs::home_dir;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
 use std::env;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::process;
@@ -50,8 +52,14 @@ pub async fn run_websocket_server_with_notifications(
 ) -> Result<()> {
     info!("Starting WebSocket server...");
 
-    // Use fixed port or provided port, default to 59792
-    let port = port.unwrap_or(59792);
+    // Use fixed port or provided port, or calculate from workspace
+    let port = port.unwrap_or_else(|| {
+        if let Some(ref wt) = worktree {
+            calculate_workspace_port(wt)
+        } else {
+            59792
+        }
+    });
 
     // Clean up any existing lock files for this port
     cleanup_existing_lock_file(port).await?;
@@ -369,4 +377,23 @@ async fn handle_websocket_message(
     }
 
     Ok(())
+}
+
+/// Calculate a deterministic port number based on workspace path
+/// This ensures each workspace gets its own unique port
+fn calculate_workspace_port(workspace_path: &PathBuf) -> u16 {
+    let mut hasher = DefaultHasher::new();
+    workspace_path.to_string_lossy().hash(&mut hasher);
+    let hash = hasher.finish();
+
+    // Map hash to port range 59792-65535 (avoiding system ports)
+    let port_range = 65535 - 59792;
+    let port = 59792 + ((hash % port_range as u64) as u16);
+
+    info!(
+        "Calculated port {} for workspace: {}",
+        port,
+        workspace_path.display()
+    );
+    port
 }

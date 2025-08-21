@@ -89,27 +89,27 @@ impl ClaudeCodeLanguageServer {
     // LSP uses UTF-16 code units for character positions per the specification
     fn char_pos_to_byte_pos(line: &str, utf16_pos: usize) -> Option<usize> {
         let mut current_utf16_pos = 0;
-        
+
         for (byte_pos, ch) in line.char_indices() {
             if current_utf16_pos == utf16_pos {
                 return Some(byte_pos);
             }
-            
+
             let char_utf16_len = ch.len_utf16();
-            
+
             // If utf16_pos falls within this character's UTF-16 span, return this char's byte position
             if utf16_pos < current_utf16_pos + char_utf16_len {
                 return Some(byte_pos);
             }
-            
+
             current_utf16_pos += char_utf16_len;
         }
-        
+
         // If utf16_pos is at the end of the string
         if current_utf16_pos == utf16_pos {
             return Some(line.len());
         }
-        
+
         None
     }
 
@@ -130,9 +130,10 @@ impl ClaudeCodeLanguageServer {
                         let start_char = range.start.character as usize;
                         let end_char = range.end.character as usize;
 
-                        if let (Some(start_byte), Some(end_byte)) = 
-                            (Self::char_pos_to_byte_pos(line, start_char),
-                             Self::char_pos_to_byte_pos(line, end_char)) {
+                        if let (Some(start_byte), Some(end_byte)) = (
+                            Self::char_pos_to_byte_pos(line, start_char),
+                            Self::char_pos_to_byte_pos(line, end_char),
+                        ) {
                             if start_byte <= end_byte {
                                 return line[start_byte..end_byte].to_string();
                             }
@@ -147,7 +148,9 @@ impl ClaudeCodeLanguageServer {
                             if i == 0 {
                                 // First line - from start character to end
                                 let start_char = range.start.character as usize;
-                                if let Some(start_byte) = Self::char_pos_to_byte_pos(line, start_char) {
+                                if let Some(start_byte) =
+                                    Self::char_pos_to_byte_pos(line, start_char)
+                                {
                                     selected_text.push_str(&line[start_byte..]);
                                 }
                             } else if line_index == range.end.line {
@@ -280,40 +283,7 @@ impl LanguageServer for ClaudeCodeLanguageServer {
             position.line, position.character
         );
 
-        let completions = vec![
-            CompletionItem {
-                label: "@claude explain".to_string(),
-                kind: Some(CompletionItemKind::TEXT),
-                detail: Some("Explain this code with Claude".to_string()),
-                documentation: Some(Documentation::String(
-                    "Ask Claude to explain the selected code or current context".to_string(),
-                )),
-                insert_text: Some("@claude explain".to_string()),
-                ..Default::default()
-            },
-            CompletionItem {
-                label: "@claude improve".to_string(),
-                kind: Some(CompletionItemKind::TEXT),
-                detail: Some("Improve this code with Claude".to_string()),
-                documentation: Some(Documentation::String(
-                    "Ask Claude to suggest improvements for the selected code".to_string(),
-                )),
-                insert_text: Some("@claude improve".to_string()),
-                ..Default::default()
-            },
-            CompletionItem {
-                label: "@claude fix".to_string(),
-                kind: Some(CompletionItemKind::TEXT),
-                detail: Some("Fix issues in this code with Claude".to_string()),
-                documentation: Some(Documentation::String(
-                    "Ask Claude to identify and fix issues in the selected code".to_string(),
-                )),
-                insert_text: Some("@claude fix".to_string()),
-                ..Default::default()
-            },
-        ];
-
-        Ok(Some(CompletionResponse::Array(completions)))
+        Ok(None)
     }
 
     async fn code_action(&self, params: CodeActionParams) -> LspResult<Option<CodeActionResponse>> {
