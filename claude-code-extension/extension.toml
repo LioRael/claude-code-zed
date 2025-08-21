@@ -1,6 +1,6 @@
 id = "claude-code-zed"
 name = "Claude Code Zed"
-version = "0.1.1"
+version = "0.1.3"
 schema_version = 1
 authors = ["isomo <jiahaoxiang2000@gmail.com>"]
 description = "Integration with Claude Code CLI for AI-assisted coding in Zed"
