@@ -64,7 +64,7 @@ impl Extension for ClaudeCodeExtension {
                     }],
                     "claudeCode": {
                         "enabled": true,
-                        "extensionVersion": "0.1.3",
+                        "extensionVersion": "0.1.4",
                         "ideName": "Zed"
                     }
                 });
